@@ -4,10 +4,12 @@ import numpy as np
 from sklearn.preprocessing import normalize
 import cupy as cp
 from cuml.cluster import KMeans
-from torch.utils.dlpack import to_dlpack
+from torch.utils.dlpack import to_dlpack, from_dlpack
 from cupy import fromDlpack
 import math
 import time
+from pytorch_memlab import MemReporter
+import sys
 
 def run_clustering(tdict, num_clusters, observation_window=100, print_log=False, device=None):
     if device is None:
@@ -68,11 +70,21 @@ def run_clustering(tdict, num_clusters, observation_window=100, print_log=False,
                 verbose=0,
                 random_state=0
             )
-            kmeans.fit(data_cp)
+            try:
+                kmeans.fit(data_cp)
+            except:
+                print("clustering oom")
+                reporter = MemReporter()
+                reporter.report()
+                print(torch.cuda.memory_allocated(device))
+                sys.exit()
             cluster_labels = kmeans.labels_
 
             # convert labels to pytorch tensor
-            dlpack_labels = cluster_labels.toDlpack()
+            labels_tensor = torch.tensor(cluster_labels, dtype=torch.int64)
+
+            # Now use DLPack (only if really needed)
+            dlpack_labels = torch.utils.dlpack.to_dlpack(labels_tensor)
             labels = torch.utils.dlpack.from_dlpack(dlpack_labels)
 
             # Compute cluster centers (centroids)

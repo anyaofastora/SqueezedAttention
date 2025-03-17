@@ -8,7 +8,7 @@ PERC_CLUSTERS="5" # Percent Clusters
 
 # loop over datasets
 for DATASET in "${DATASETS[@]}"; do
-  PATH_TO_SAVE_CLUSTERS="/home/chooper/fixed-prompt-clusters/${DATASET}/"
+  PATH_TO_SAVE_CLUSTERS="./fixed-prompt-clusters/${DATASET}/"
   python offline_clustering.py $MODEL \
                                  --dataset $DATASET \
                                  --output_path $PATH_TO_SAVE_CLUSTERS \

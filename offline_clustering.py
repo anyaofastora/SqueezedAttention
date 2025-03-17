@@ -20,6 +20,9 @@ import json
 from squeezedattention.clustering import run_clustering, run_global_threshold
 from squeezedattention.utils import build_chat, truncate_fn
 from transformers import AutoTokenizer, LlamaForCausalLM, LlamaConfig
+from pytorch_memlab import MemReporter
+import sys
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -50,7 +53,11 @@ if __name__ == "__main__":
     model2maxlen = json.load(open("LongBench/config/model2maxlen.json", "r"))
     model_path = model2path[args.model]
     max_length = model2maxlen[args.model]
-
+    
+    print("------------1-------------")
+    reporter = MemReporter()
+    reporter.report()
+    
     # load model
     tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False)
     config = LlamaConfig.from_pretrained(model_path)
@@ -60,7 +67,11 @@ if __name__ == "__main__":
     model = LlamaForCausalLM.from_pretrained(model_path, config=config, torch_dtype=torch.bfloat16)
     model.eval()
     model = model.to(DEV)
-
+    
+    print("------------2-------------")
+    reporter = MemReporter()
+    reporter.report()
+    
     # get model layers
     model_type = parse_model(model)
     layers = get_layers(model, model_type)
@@ -70,7 +81,11 @@ if __name__ == "__main__":
     dataset = args.dataset
     dataset_name_prompt = dataset + '_prompt'
     data = load_dataset('THUDM/LongBench', dataset, split='test')
-
+    
+    print("------------3-------------")
+    reporter = MemReporter()
+    reporter.report()
+    
     # define prompt format
     import json
     dataset2prompt = json.load(open("LongBench/config/dataset2prompt.json", "r"))
@@ -88,10 +103,14 @@ if __name__ == "__main__":
         prompt_only = prompt_only_format.format(**data_all[i])
 
         # perform truncation and get truncated shared prefix length
-        prompt, truncated_shared_prefix_length = truncate_fn(prompt, prompt_only, tokenizer, max_length, dataset, DEV)
+        prompt, truncated_shared_prefix_length = truncate_fn(prompt, prompt_only, tokenizer, max_length, dataset, DEV, args.model)
         shared_prefix_length[i] = truncated_shared_prefix_length
         assert (truncated_shared_prefix_length > 0) # else, truncated part of input context as well
-
+    
+    print("------------4-------------")
+    reporter = MemReporter()
+    reporter.report()
+    
     # add hooks to profile attn scores
     all_queries_layers = []
     all_keys_layers = []
@@ -120,22 +139,37 @@ if __name__ == "__main__":
         prompt = prompt_format.format(**d)
         prompt_only = prompt_only_format.format(**d)
 
+        print("d", d)
+        print("prompt", prompt)
+        print("prompt_only", prompt_only)
+        
         # get truncated input prompt
-        prompt, _ = truncate_fn(prompt, prompt_only, tokenizer, max_length, dataset, DEV)
+        prompt, _ = truncate_fn(prompt, prompt_only, tokenizer, max_length, dataset, DEV, args.model)
         input_ids = tokenizer(prompt, truncation=False, return_tensors="pt").input_ids.to(DEV)
 
+        print("------------5-------------", dataidx)
+        reporter = MemReporter()
+        reporter.report()
+    
         print(f"dataidx: {dataidx} | length of input_ids: {len(input_ids[0])}")
         print(f"dataidx: {dataidx} | shared_prefix_length: {shared_prefix_length[dataidx]}")
 
         # run generation
         with torch.no_grad():
-            generated_ids = model.generate(
-                input_ids,
-                do_sample=True,
-                max_new_tokens=1,
-                use_cache=False,
-                output_attentions=True
-            )
+            try:
+                generated_ids = model.generate(
+                    input_ids,
+                    do_sample=True,
+                    max_new_tokens=1,
+                    use_cache=False,
+                    output_attentions=True
+                )
+            except:
+                print("inference oom")
+                reporter = MemReporter()
+                reporter.report()
+                print(torch.cuda.memory_allocated(DEV))
+                sys.exit()
 
         # write out data
         if not os.path.exists(args.output_path):

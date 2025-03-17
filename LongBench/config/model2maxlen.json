@@ -9,5 +9,6 @@
     "vicuna-v1.5-7b-16k": 15500,
     "LLaMA-2-7B-32K": 31500,
     "Phi-3-mini-128k-instruct": 127000,
-    "LWM-Text-Chat-1M": 31500
+    "LWM-Text-Chat-1M": 31500,
+    "Llama-3.1-8B": 127000
 }
