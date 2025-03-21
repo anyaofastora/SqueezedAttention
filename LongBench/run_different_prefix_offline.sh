@@ -3,7 +3,7 @@
 export CUDA_VISIBLE_DEVICES=2
 
 # arguments:
-PATH_TO_CLUSTERS="/home/chooper/fixed-prompt-clusters/"
+PATH_TO_CLUSTERS="./fixed-prompt-clusters/"
 PERCENTILE="0.90" # percentile for pruning
 DATASET="2wikimqa"
 PERC_CLUSTERS="5"

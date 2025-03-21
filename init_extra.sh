@@ -4,4 +4,4 @@ conda install pytest scikit-learn cupy cuml
 pip install sentencepiece
 pip install protobuf
 pip install flash-attn --no-build-isolation
-
+pip install pytest 

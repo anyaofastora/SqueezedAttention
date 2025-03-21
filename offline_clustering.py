@@ -55,8 +55,6 @@ if __name__ == "__main__":
     max_length = model2maxlen[args.model]
     
     print("------------1-------------")
-    reporter = MemReporter()
-    reporter.report()
     
     # load model
     tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False)
@@ -69,8 +67,6 @@ if __name__ == "__main__":
     model = model.to(DEV)
     
     print("------------2-------------")
-    reporter = MemReporter()
-    reporter.report()
     
     # get model layers
     model_type = parse_model(model)
@@ -80,11 +76,9 @@ if __name__ == "__main__":
     from datasets import load_dataset
     dataset = args.dataset
     dataset_name_prompt = dataset + '_prompt'
-    data = load_dataset('THUDM/LongBench', dataset, split='test')
+    data = load_dataset('THUDM/LongBench', dataset, split='test', trust_remote_code=True)
     
     print("------------3-------------")
-    reporter = MemReporter()
-    reporter.report()
     
     # define prompt format
     import json
@@ -108,8 +102,6 @@ if __name__ == "__main__":
         assert (truncated_shared_prefix_length > 0) # else, truncated part of input context as well
     
     print("------------4-------------")
-    reporter = MemReporter()
-    reporter.report()
     
     # add hooks to profile attn scores
     all_queries_layers = []

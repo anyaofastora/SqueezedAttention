@@ -7,7 +7,7 @@
     "chatglm2-6b-32k": "THUDM/chatglm2-6b-32k",
     "chatglm3-6b-32k": "THUDM/chatglm3-6b-32k",
     "vicuna-v1.5-7b-16k": "lmsys/vicuna-7b-v1.5-16k",
-    "LLaMA-2-7B-32K": "togethercomputer/LLaMA-2-7B-32K",
+    "LLaMA-2-7B-32K": "./models/LLaMA-2-7B-32K",
     "Phi-3-mini-128k-instruct": "/rscratch/chooper/Phi-3-mini-128k-instruct",
     "LWM-Text-Chat-1M": "./models/LWM-Text-Chat-1M",
     "Llama-3.1-8B": "meta-llama/Llama-3.1-8B"
